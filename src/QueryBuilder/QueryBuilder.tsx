@@ -13,8 +13,11 @@ import AntdConfig from "react-awesome-query-builder/lib/config/antd";
 import MaterialConfig from "react-awesome-query-builder/lib/config/material";
 //import "antd/dist/antd.css"; // or import "react-awesome-query-builder/css/antd.less";
 // For Material-UI widgets only:
-//import MaterialConfig from "react-awesome-query-builder/lib/config/material";
+// import MaterialConfig from "react-awesome-query-builder/lib/config/material";
 
+import AntdWidgets from "react-awesome-query-builder/lib/components/widgets/antd";
+// import MaterialWidgets from 'react-awesome-query-builder/lib/components/widgets/material';
+const { TextWidget, NumberWidget } = AntdWidgets;
 import "react-awesome-query-builder/lib/css/styles.css";
 import "react-awesome-query-builder/lib/css/compact_styles.css"; //optional, for more compact styles
 
@@ -22,11 +25,76 @@ import "react-awesome-query-builder/lib/css/compact_styles.css"; //optional, for
 const InitialConfig = MaterialConfig; //AntdConfig; // or MaterialConfig or BasicConfig
 
 // You need to provide your own config. See below 'Config format'
+// add custom data types.
 const config: Config = {
   ...InitialConfig,
+  conjunctions: { ...InitialConfig.conjunctions },
+  widgets: {
+    ...InitialConfig.widgets,
+    text: {
+      type: "text",
+      valueSrc: "value",
+      factory: (props) => <TextWidget {...props} />,
+      formatValue: (val, _fieldDef, _wgtDef, isForDisplay) =>
+        isForDisplay ? val.toString() : JSON.stringify(val),
+      mongoFormatValue: (val, _fieldDef, _wgtDef) => val,
+      sqlFormatValue: (sqlValue) => {
+        return sqlValue + "PAT";
+      },
+      // Options:
+      valueLabel: "Text",
+      valuePlaceholder: "Enter text",
+      // Custom props (https://ant.design/components/input/):
+      customProps: {
+        maxLength: 10,
+      },
+    },
+  },
+  operators: {
+    ...InitialConfig.operators,
+    equal: {
+      label: "test",
+      reversedOp: "not_equal",
+      labelForFormat: "===",
+      cardinality: 1,
+      formatOp: (field, _op, value, _valueSrc, _valueType, opDef) =>
+        `${field} ${opDef.labelForFormat} ${value}`,
+      mongoFormatOp: (field, op, value) => ({ [field]: { $eq: value } }),
+    },
+  },
+  funcs: {
+    lower: {
+      label: "Lowercase",
+      sqlFunc: "LOWER",
+      mongoFunc: "$toLower",
+      returnType: "text",
+      args: {
+        str: {
+          type: "text",
+          valueSources: ["value", "field"],
+        },
+      },
+    },
+  },
   fields: {
     qty: {
       label: "Qty",
+      type: "number",
+      fieldSettings: {
+        min: 0,
+      },
+      valueSources: ["value"],
+      preferWidgets: ["number"],
+    },
+    pat: {
+      label: "pat",
+      type: "text",
+      fieldSettings: {},
+      valueSources: ["value"],
+      preferWidgets: ["text"],
+    },
+    reifen: {
+      label: "Reifen",
       type: "number",
       fieldSettings: {
         min: 0,
@@ -101,7 +169,7 @@ export const QueryBuilder: React.FC = () => {
         renderBuilder={renderBuilder}
       />
       <div className="query-builder-result">
-        <div>
+        {/* <div>
           Query string:{" "}
           <pre>
             {JSON.stringify(QbUtils.queryString(state.tree, state.config))}
@@ -112,13 +180,14 @@ export const QueryBuilder: React.FC = () => {
           <pre>
             {JSON.stringify(QbUtils.mongodbFormat(state.tree, state.config))}
           </pre>
-        </div>
+        </div> */}
         <div>
           SQL where:{" "}
           <pre>
             {JSON.stringify(QbUtils.sqlFormat(state.tree, state.config))}
           </pre>
         </div>
+
         <div>
           JsonLogic:{" "}
           <pre>
