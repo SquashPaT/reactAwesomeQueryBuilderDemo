@@ -26,6 +26,7 @@ const InitialConfig = MaterialConfig; //AntdConfig; // or MaterialConfig or Basi
 
 // You need to provide your own config. See below 'Config format'
 // add custom data types.
+// add custom data types.
 const config: Config = {
   ...InitialConfig,
   conjunctions: { ...InitialConfig.conjunctions },
