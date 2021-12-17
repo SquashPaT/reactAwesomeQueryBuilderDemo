@@ -26,7 +26,6 @@ const InitialConfig = MaterialConfig; //AntdConfig; // or MaterialConfig or Basi
 
 // You need to provide your own config. See below 'Config format'
 // add custom data types.
-// add custom data types.
 const config: Config = {
   ...InitialConfig,
   conjunctions: { ...InitialConfig.conjunctions },
@@ -117,9 +116,10 @@ const config: Config = {
       label: "Color",
       type: "select",
       valueSources: ["value"],
+      funcs: ["lower"],
       fieldSettings: {
         listValues: [
-          { value: "yellow", title: "Yellow" },
+          { value: "YELLOW", title: "YELLOW" },
           { value: "green", title: "Green" },
           { value: "orange", title: "Orange" },
         ],
