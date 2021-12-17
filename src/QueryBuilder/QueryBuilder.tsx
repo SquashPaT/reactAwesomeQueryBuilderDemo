@@ -50,6 +50,28 @@ const config: Config = {
       },
     },
   },
+  types: {
+    ...InitialConfig.types,
+    time: {
+      valueSources: ["value", "field", "func"],
+      defaultOperator: "equal",
+      widgets: {
+        time: {
+          operators: ["equal", "between"],
+          widgetProps: {
+            valuePlaceholder: "Time",
+            timeFormat: "h:mm:ss A",
+            use12Hours: true,
+          },
+          opProps: {
+            between: {
+              valueLabels: ["Time from", "Time to"],
+            },
+          },
+        },
+      },
+    },
+  },
   operators: {
     ...InitialConfig.operators,
     equal: {
@@ -80,6 +102,15 @@ const config: Config = {
     qty: {
       label: "Qty",
       type: "number",
+      fieldSettings: {
+        min: 0,
+      },
+      valueSources: ["value"],
+      preferWidgets: ["number"],
+    },
+    time: {
+      label: "time",
+      type: "time",
       fieldSettings: {
         min: 0,
       },
