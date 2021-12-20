@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { Query, Builder, Utils as QbUtils } from "react-awesome-query-builder";
+import moment from "moment";
+import {
+  Query,
+  Builder,
+  Utils as QbUtils,
+  OperatorProximity,
+  DateTimeFieldSettings,
+  Utils,
+} from "react-awesome-query-builder";
 // types
 import {
   JsonGroup,
@@ -20,10 +28,49 @@ import AntdWidgets from "react-awesome-query-builder/lib/components/widgets/antd
 const { TextWidget, NumberWidget } = AntdWidgets;
 import "react-awesome-query-builder/lib/css/styles.css";
 import "react-awesome-query-builder/lib/css/compact_styles.css"; //optional, for more compact styles
-
+const demoListValues = [
+  { title: "A", value: "a" },
+  { title: "AA", value: "aa" },
+  { title: "AAA1", value: "aaa1" },
+  { title: "AAA2", value: "aaa2" },
+  { title: "B", value: "b" },
+  { title: "C", value: "c" },
+  { title: "D", value: "d" },
+  { title: "E", value: "e" },
+  { title: "F", value: "f" },
+  { title: "G", value: "g" },
+  { title: "H", value: "h" },
+  { title: "I", value: "i" },
+  { title: "J", value: "j" },
+];
+const { simulateAsyncFetch } = Utils;
+const simulatedAsyncFetch = simulateAsyncFetch(demoListValues, 3);
 // Choose your skin (ant/material/vanilla):
 const InitialConfig = MaterialConfig; //AntdConfig; // or MaterialConfig or BasicConfig
 
+const proximity: OperatorProximity = {
+  ...InitialConfig.operators.proximity,
+  valueLabels: [
+    { label: "Word 1", placeholder: "Enter first word" },
+    { label: "Word 2", placeholder: "Enter second word" },
+  ],
+  textSeparators: [
+    //'Word 1',
+    //'Word 2'
+  ],
+  options: {
+    ...InitialConfig.operators.proximity.options,
+    optionLabel: "Near", // label on top of "near" selectbox (for config.settings.showLabels==true)
+    optionTextBefore: "Near", // label before "near" selectbox (for config.settings.showLabels==false)
+    optionPlaceholder: "Select words between", // placeholder for "near" selectbox
+    minProximity: 2,
+    maxProximity: 10,
+    defaults: {
+      proximity: 2,
+    },
+    customProps: {},
+  },
+};
 // You need to provide your own config. See below 'Config format'
 // add custom data types.
 const config: Config = {
@@ -75,13 +122,19 @@ const config: Config = {
   operators: {
     ...InitialConfig.operators,
     equal: {
-      label: "test",
+      label: "testEqual",
       reversedOp: "not_equal",
-      labelForFormat: "===",
+      labelForFormat: "==",
       cardinality: 1,
       formatOp: (field, _op, value, _valueSrc, _valueType, opDef) =>
         `${field} ${opDef.labelForFormat} ${value}`,
       mongoFormatOp: (field, op, value) => ({ [field]: { $eq: value } }),
+    },
+    proximity,
+    between: {
+      ...InitialConfig.operators.between,
+      valueLabels: ["Value from", "Value to"],
+      textSeparators: ["from", "to"],
     },
   },
   funcs: {
@@ -92,13 +145,21 @@ const config: Config = {
       returnType: "text",
       args: {
         str: {
-          type: "text",
+          type: "time",
           valueSources: ["value", "field"],
         },
       },
     },
   },
   fields: {
+    bio: {
+      label: "Bio",
+      type: "text",
+      preferWidgets: ["textarea"],
+      fieldSettings: {
+        maxLength: 1000,
+      },
+    },
     qty: {
       label: "Qty",
       type: "number",
@@ -117,8 +178,8 @@ const config: Config = {
       valueSources: ["value"],
       preferWidgets: ["number"],
     },
-    pat: {
-      label: "pat",
+    tiger: {
+      label: "tiger",
       type: "text",
       fieldSettings: {},
       valueSources: ["value"],
@@ -143,17 +204,53 @@ const config: Config = {
       },
       preferWidgets: ["slider", "rangeslider"],
     },
+    date: {
+      label: "Date",
+      type: "date",
+      valueSources: ["value"],
+      fieldSettings: {
+        dateFormat: "DD-MM-YYYY",
+        validateValue: (val, fieldSettings: DateTimeFieldSettings) => {
+          // example of date validation
+          const dateVal = moment(val, fieldSettings.valueFormat);
+          return dateVal.year() != new Date().getFullYear()
+            ? "Please use current year"
+            : null;
+        },
+      },
+    },
     color: {
       label: "Color",
       type: "select",
       valueSources: ["value"],
-      funcs: ["lower"],
+      funcs: ["Lowercase"],
       fieldSettings: {
         listValues: [
           { value: "YELLOW", title: "YELLOW" },
-          { value: "green", title: "Green" },
-          { value: "orange", title: "Orange" },
+          { value: "GREEN", title: "GREEN" },
+          { value: "ORANGE", title: "ORANGE" },
         ],
+      },
+    },
+    autocomplete: {
+      label: "SomeName",
+      type: "select",
+      valueSources: ["value"],
+      fieldSettings: {
+        asyncFetch: simulatedAsyncFetch,
+        useAsyncSearch: true,
+        useLoadMore: true,
+        forceAsyncSearch: false,
+        allowCustomValues: true,
+      },
+    },
+    stock: {
+      label: "In stock",
+      type: "boolean",
+      defaultValue: true,
+      mainWidgetProps: {
+        labelYes: "+",
+        labelNo: "-",
       },
     },
     is_promotion: {
